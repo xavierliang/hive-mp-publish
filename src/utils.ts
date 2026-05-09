@@ -1,3 +1,4 @@
+// Derived from https://github.com/caol64/wenyan-cli (Apache-2.0); modified by hive-mp-publish contributors.
 import path from "node:path";
 import fs from "node:fs/promises";
 import { getNormalizeFilePath } from "@wenyan-md/core/wrapper";

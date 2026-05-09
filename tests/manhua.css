@@ -1,3 +1,4 @@
+/* Derived from https://github.com/caol64/wenyan-cli (Apache-2.0); retained unmodified by hive-mp-publish contributors for renderer testing. */
 :root {
     /* 漫画风格配色变量 */
     --comic-bg: #fdfdfd; /* 背景纸色 */

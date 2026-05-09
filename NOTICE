@@ -1,0 +1,20 @@
+hive-mp-publish
+Copyright 2026 hive-mp-publish contributors
+
+This product is forked from and includes work derived from:
+
+  wenyan-cli
+  https://github.com/caol64/wenyan-cli
+  Copyright Lei <caol64@gmail.com>
+  Licensed under the Apache License, Version 2.0.
+
+The Markdown rendering and WeChat publishing core continues to be
+provided by the upstream npm package:
+
+  @wenyan-md/core
+  https://github.com/caol64/wenyan-core
+  Copyright Lei <caol64@gmail.com>
+  Licensed under the Apache License, Version 2.0.
+
+Sincere thanks to caol64 and the Wenyan project for the original work
+that this fork builds on.

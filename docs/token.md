@@ -10,7 +10,7 @@ hive-mp-publish token -l
 
 **导入外部 Token：**
 
-通过该方式导入的 Token，其过期时间会被标记为 `-1`。**Wenyan 将不再尝试自动刷新该 Token**，其生命周期完全由外部系统托管。
+通过该方式导入的 Token，其过期时间会被标记为 `-1`。**hive-mp-publish 将不再尝试自动刷新该 Token**，其生命周期完全由外部系统托管。
 
 ```bash
 # 必须同时提供 appId 和 token

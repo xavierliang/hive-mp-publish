@@ -22,11 +22,18 @@
   "files": [
     "dist"
   ],
-  "homepage": "https://github.com/xavier/hive-mp-publish#readme",
+  "homepage": "https://github.com/xavierliang/hive-mp-publish#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xavierliang/hive-mp-publish.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xavierliang/hive-mp-publish/issues"
+  },
   "scripts": {
     "build": "tsc",
     "upgrade:core": "pnpm update @wenyan-md/core",
-    "prepublishOnly": "pnpm upgrade:core && pnpm build",
+    "prepublishOnly": "pnpm upgrade:core && pnpm typecheck && pnpm test && pnpm build",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "test:watch": "node --import tsx --test --watch \"tests/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",

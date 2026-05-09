@@ -6,6 +6,8 @@ author: 路边的阿不
 source_url: https://babyno.top/posts/2025/06/let-ai-help-you-manage-your-gzh-layout-and-publishing/
 ---
 
+<!-- Test fixture derived from https://github.com/caol64/wenyan-cli (Apache-2.0); retained unmodified by hive-mp-publish contributors for renderer testing. -->
+
 ## 使用方式
 
 - 方式一：本地运行

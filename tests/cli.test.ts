@@ -1,3 +1,4 @@
+// Derived from https://github.com/caol64/wenyan-cli (Apache-2.0); modified by hive-mp-publish contributors.
 import { describe, it, mock, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { createProgram } from "../src/cli.js";
@@ -58,7 +59,7 @@ describe("CLI Argument Parsing", () => {
         const consoleLogMock = mock.fn();
         mock.method(console, "log", consoleLogMock);
 
-        const args = ["node", "wenyan", "theme", "--list"];
+        const args = ["node", "hive-mp-publish", "theme", "--list"];
 
         await program.parseAsync(args);
 

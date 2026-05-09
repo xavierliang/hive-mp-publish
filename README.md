@@ -2,7 +2,7 @@
 
 公众号发布工具：把本地 Markdown 渲染后发布到微信公众号草稿箱。
 
-本仓库基于 `caol64/wenyan-cli` fork 改造，当前目标是方案 B 的受控试点 MVP：固定 IP Gateway + 客户本地保存公众号 secret + 每次 HTTPS 请求携带凭据。
+本仓库基于 `caol64/wenyan-cli` fork 改造（Apache-2.0，详见 [NOTICE](NOTICE)），当前目标是方案 B 的受控试点 MVP：固定 IP Gateway + 客户本地保存公众号 secret + 每次 HTTPS 请求携带凭据。
 
 ## 当前范围
 

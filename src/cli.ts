@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Derived from https://github.com/caol64/wenyan-cli (Apache-2.0); modified by hive-mp-publish contributors.
 import { Command } from "commander";
 import pkg from "../package.json" with { type: "json" };
 import {

@@ -1,6 +1,6 @@
 ---
 name: "apply-wechat-custom-theme"
-description: "AI-ready skill to test, register, and publish Markdown articles to WeChat Official Accounts using a local custom CSS theme via Wenyan CLI."
+description: "AI-ready skill to test, register, and publish Markdown articles to WeChat Official Accounts using a local custom CSS theme via hive-mp-publish CLI."
 ---
 
 # 微信公众号自定义主题应用工具 (WeChat Custom Theme Applier)
