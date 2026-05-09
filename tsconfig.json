@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "types": ["node"],
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": false,
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "noImplicitAny": false,
+    "declarationDir": "dist/types",
+  },
+  "include": ["src", "tests"],
+  "exclude": ["node_modules", "dist", "tests"]
+}

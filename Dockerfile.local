@@ -1,0 +1,32 @@
+FROM node:24-alpine AS builder
+
+ARG NPM_REGISTRY=https://registry.npmjs.org/
+
+WORKDIR /app
+
+RUN npm config set registry ${NPM_REGISTRY} && npm install -g pnpm@9.15.4
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY tsconfig.json ./
+COPY src ./src
+RUN pnpm exec tsc --build
+
+FROM node:24-alpine AS runner
+ENV NODE_ENV=production
+ENV CONTAINERIZED=1
+ENV CONTAINER_FILE_PATH=/mnt/host-downloads
+ENV HIVE_MP_GATEWAY_DB=/data/gateway.sqlite
+
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules/
+COPY --from=builder /app/dist ./dist/
+COPY package.json ./
+
+EXPOSE 3000
+VOLUME ["/data"]
+
+ENTRYPOINT ["node", "./dist/cli.js"]
+
+CMD ["--help"]
