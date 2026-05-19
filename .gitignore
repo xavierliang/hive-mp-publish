@@ -1,6 +1,7 @@
 node_modules/
 build/
 dist/
+releases/
 *.log
 .env*
 *.tsbuildinfo
