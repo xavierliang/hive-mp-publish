@@ -15,23 +15,36 @@
 
 ## 快速开始
 
-安装依赖并构建：
+运行环境：
+
+- Node.js >= 22.19。
+- Gateway/server 模式推荐 Node.js 24。
+
+从 npm 安装 CLI：
+
+```bash
+npm install -g hive-mp-publish
+hive-mp-publish doctor
+```
+
+也可以从源码安装依赖并构建：
 
 ```bash
 pnpm install
 pnpm build
+node dist/cli.js doctor
 ```
 
 在 Gateway 机器上签发一个客户 API key：
 
 ```bash
-node dist/cli.js key issue --name acme
+hive-mp-publish key issue --name acme
 ```
 
 启动 Gateway：
 
 ```bash
-node dist/cli.js serve --port 3000
+hive-mp-publish serve --port 3000
 ```
 
 生产环境应放在 Caddy/Nginx 后面，由反向代理提供 HTTPS，并把这台 Gateway 的固定公网 IP 加到微信公众号后台 IP 白名单。
@@ -39,13 +52,13 @@ node dist/cli.js serve --port 3000
 客户机器配置本地公众号凭据：
 
 ```bash
-node dist/cli.js credential --set
+hive-mp-publish credential --set
 ```
 
 客户发布文章：
 
 ```bash
-node dist/cli.js publish -f article.md \
+hive-mp-publish publish -f article.md \
   --app-id your-appid-or-local-alias \
   --server https://mp-gateway.example.com \
   --api-key hmp_live_xxx
@@ -87,7 +100,9 @@ source_url: https://example.com/original
 ```bash
 pnpm typecheck
 pnpm test
+pnpm exec eslint .
 pnpm build
+npm pack --dry-run
 ```
 
 当前真实微信公众号发布链路需要有效认证公众号、`appid/appSecret` 和已配置 Gateway IP 白名单后才能验证。

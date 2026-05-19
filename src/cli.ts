@@ -18,6 +18,7 @@ import {
 import { getInputContent } from "./utils.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
 import input from "@inquirer/input";
 import password from "@inquirer/password";
 import { loadEnvFile } from "node:process";
@@ -157,6 +158,15 @@ export function createProgram(version: string = pkg.version): Command {
                 console.error(redactSensitive(error.message || error));
                 process.exit(1);
             }
+        });
+
+    program
+        .command("doctor")
+        .description("Check local runtime and hive-mp-publish installation")
+        .action(async () => {
+            await runCommandWrapper(async () => {
+                await runDoctor(version);
+            });
         });
 
     addKeyCommands(program);
@@ -341,6 +351,58 @@ function addKeyCommands(program: Command): void {
         });
 }
 
+async function runDoctor(version: string): Promise<void> {
+    const checks: Array<{ label: string; status: "ok" | "warn" | "fail"; detail: string }> = [];
+    const minimumNode = "22.19.0";
+    const nodeVersion = process.versions.node;
+
+    checks.push({
+        label: "Node.js",
+        status: isAtLeastVersion(nodeVersion, minimumNode) ? "ok" : "warn",
+        detail: `${process.version} (requires >=${minimumNode}; Node 24 is recommended for Gateway/server mode)`,
+    });
+
+    checks.push({
+        label: "CLI version",
+        status: "ok",
+        detail: version,
+    });
+
+    checks.push({
+        label: "Config directory",
+        status: "ok",
+        detail: configDir,
+    });
+
+    const credentialPath = path.join(configDir, "credential.json");
+    checks.push({
+        label: "WeChat credential",
+        status: existsSync(credentialPath) ? "ok" : "warn",
+        detail: existsSync(credentialPath)
+            ? `configured at ${credentialPath}`
+            : `not configured yet (${credentialPath}); run hive-mp-publish credential --set before publishing`,
+    });
+
+    const themes = await listThemes();
+    checks.push({
+        label: "Themes",
+        status: themes.length > 0 ? "ok" : "fail",
+        detail: `${themes.length} available`,
+    });
+
+    console.log("hive-mp-publish doctor");
+    for (const check of checks) {
+        console.log(`${check.status}  ${check.label}: ${check.detail}`);
+    }
+
+    const failed = checks.filter((check) => check.status === "fail");
+    if (failed.length > 0) {
+        throw new Error(`doctor failed: ${failed.map((check) => check.label).join(", ")}`);
+    }
+
+    console.log("doctor ok");
+}
+
 function getDefaultGatewayDbPath(): string {
     return process.env.HIVE_MP_GATEWAY_DB || path.join(configDir, "gateway.sqlite");
 }
@@ -360,6 +422,20 @@ function parsePositiveInt(raw: string, name: string): number {
         throw new Error(`${name} must be a positive integer`);
     }
     return value;
+}
+
+function isAtLeastVersion(actual: string, minimum: string): boolean {
+    const actualParts = actual.split(".").map((part) => Number(part));
+    const minimumParts = minimum.split(".").map((part) => Number(part));
+
+    for (let i = 0; i < Math.max(actualParts.length, minimumParts.length); i += 1) {
+        const actualPart = actualParts[i] ?? 0;
+        const minimumPart = minimumParts[i] ?? 0;
+        if (actualPart > minimumPart) return true;
+        if (actualPart < minimumPart) return false;
+    }
+
+    return true;
 }
 
 async function setupProxy(proxyUrl?: string) {

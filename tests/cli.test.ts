@@ -48,6 +48,11 @@ describe("CLI Argument Parsing", () => {
         assert.ok(commands.includes("credential"));
     });
 
+    it("should have doctor command", () => {
+        const commands = program.commands.map((cmd) => cmd.name());
+        assert.ok(commands.includes("doctor"));
+    });
+
     it("should display help when no command is provided", async () => {
         const args = ["node", "hive-mp-publish"];
 
@@ -69,5 +74,20 @@ describe("CLI Argument Parsing", () => {
             return args.some((arg: any) => typeof arg === "string" && arg.includes("内置主题"));
         });
         assert.ok(hasOutput);
+    });
+
+    it("should run doctor command", async () => {
+        const consoleLogMock = mock.fn();
+        mock.method(console, "log", consoleLogMock);
+
+        const args = ["node", "hive-mp-publish", "doctor"];
+
+        await program.parseAsync(args);
+
+        const hasDoctorOk = consoleLogMock.mock.calls.some((call) => {
+            const args = call.arguments;
+            return args.some((arg: any) => typeof arg === "string" && arg.includes("doctor ok"));
+        });
+        assert.ok(hasDoctorOk);
     });
 });

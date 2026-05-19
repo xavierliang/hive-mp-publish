@@ -14,13 +14,17 @@
     "renderer"
   ],
   "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "bin": {
     "hive-mp-publish": "./dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/types/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "NOTICE"
   ],
   "homepage": "https://github.com/xavierliang/hive-mp-publish#readme",
   "repository": {
@@ -33,7 +37,7 @@
   "scripts": {
     "build": "tsc",
     "upgrade:core": "pnpm update @wenyan-md/core",
-    "prepublishOnly": "pnpm upgrade:core && pnpm typecheck && pnpm test && pnpm build",
+    "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "test:watch": "node --import tsx --test --watch \"tests/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",

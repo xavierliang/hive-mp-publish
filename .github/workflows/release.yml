@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Lint
+        run: pnpm exec eslint .
+
+      - name: Build
+        run: pnpm build
+
+      - name: Pack release assets
+        run: |
+          mkdir -p release-assets
+          npm pack --pack-destination release-assets
+          tar -czf release-assets/publish-to-wechat.tar.gz -C skills/publish-to-wechat .
+          tar -czf release-assets/generate-wechat-theme.tar.gz -C skills/generate-wechat-theme .
+          tar -czf release-assets/apply-wechat-custom-theme.tar.gz -C skills/apply-wechat-custom-theme .
+          ls -la release-assets
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release-assets/* --title "$GITHUB_REF_NAME" --generate-notes
