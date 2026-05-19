@@ -27,6 +27,12 @@ npm install -g hive-mp-publish
 hive-mp-publish doctor
 ```
 
+让 Agent 安装时，可以直接把这份指南发给它：
+
+```text
+https://raw.githubusercontent.com/xavierliang/hive-mp-publish/main/install/hive-mp-publish.md
+```
+
 也可以从源码安装依赖并构建：
 
 ```bash
@@ -94,6 +100,7 @@ source_url: https://example.com/original
 - [Gateway Server](docs/server.md)
 - [部署与 HTTPS](docs/deployment.md)
 - [客户接入流程](docs/customer-onboarding.md)
+- [Agent 安装指南](install/hive-mp-publish.md)
 
 ## 验证
 
