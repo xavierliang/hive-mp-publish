@@ -45,6 +45,7 @@ jobs:
         run: |
           mkdir -p release-assets
           npm pack --pack-destination release-assets
+          tar -czf release-assets/hive-mp-publish-skills.tar.gz -C skills publish-to-wechat generate-wechat-theme apply-wechat-custom-theme
           tar -czf release-assets/publish-to-wechat.tar.gz -C skills/publish-to-wechat .
           tar -czf release-assets/generate-wechat-theme.tar.gz -C skills/generate-wechat-theme .
           tar -czf release-assets/apply-wechat-custom-theme.tar.gz -C skills/apply-wechat-custom-theme .

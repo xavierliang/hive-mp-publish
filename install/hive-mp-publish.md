@@ -80,30 +80,36 @@ hive-mp-publish serve --port 3000
 
 生产环境应放在 Caddy/Nginx 后面，由反向代理提供 HTTPS，并把 Gateway 固定公网 IP 加到微信公众号后台 IP 白名单。
 
-## 可选：安装配套 skill
+## 可选：安装配套 skill pack
 
-安装发布 SOP skill：
+默认安装配套 skill pack。这个包包含三个运行时 skill：`publish-to-wechat`、`generate-wechat-theme` 和 `apply-wechat-custom-theme`。它应该解压到 Agent 的 skills 根目录，而不是某一个单独 skill 目录。
 
-```bash
-mkdir -p ~/.codex/skills/publish-to-wechat/
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/publish-to-wechat.tar.gz" | tar -xz -C ~/.codex/skills/publish-to-wechat/
-```
-
-安装主题生成 skill：
+Codex 默认目录如下；如果用户使用 Claude Code、Cursor 或其他 Agent，请先确认该工具的 skills 根目录，再替换 `SKILLS_DIR`。
 
 ```bash
-mkdir -p ~/.codex/skills/generate-wechat-theme/
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/generate-wechat-theme.tar.gz" | tar -xz -C ~/.codex/skills/generate-wechat-theme/
+SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
+mkdir -p "$SKILLS_DIR"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/hive-mp-publish-skills.tar.gz" | tar -xz -C "$SKILLS_DIR"
 ```
 
-安装自定义主题应用 skill：
+安装后目标目录应包含：
+
+```text
+publish-to-wechat/SKILL.md
+generate-wechat-theme/SKILL.md
+apply-wechat-custom-theme/SKILL.md
+```
+
+如果需要兼容旧版单 skill tarball，也可以分别把单个 tarball 解压到对应 skill 目录：
 
 ```bash
-mkdir -p ~/.codex/skills/apply-wechat-custom-theme/
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/apply-wechat-custom-theme.tar.gz" | tar -xz -C ~/.codex/skills/apply-wechat-custom-theme/
+mkdir -p "$SKILLS_DIR/publish-to-wechat"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/publish-to-wechat.tar.gz" | tar -xz -C "$SKILLS_DIR/publish-to-wechat"
+mkdir -p "$SKILLS_DIR/generate-wechat-theme"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/generate-wechat-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/generate-wechat-theme"
+mkdir -p "$SKILLS_DIR/apply-wechat-custom-theme"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/apply-wechat-custom-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/apply-wechat-custom-theme"
 ```
-
-如果用户使用 Claude Code、Cursor 或其他 Agent，请先确认该工具的 skill 目录，再把同一个 tarball 解压到对应目录。
 
 ## 常见失败
 
