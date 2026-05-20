@@ -180,7 +180,7 @@ curl https://mp-gateway.example.com/health
 {
   "status": "ok",
   "service": "hive-mp-publish-gateway",
-  "version": "0.1.0"
+  "version": "0.1.1"
 }
 ```
 

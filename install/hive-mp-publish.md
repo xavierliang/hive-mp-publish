@@ -18,14 +18,14 @@
 ```bash
 node --version
 npm --version
-npm install -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/hive-mp-publish-0.1.0.tgz"
+npm install -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1/hive-mp-publish-0.1.1.tgz"
 hive-mp-publish doctor
 ```
 
 如果 Release tarball 暂时不可用，可以从 GitHub 仓库源码安装：
 
 ```bash
-npm install -g "github:xavierliang/hive-mp-publish#v0.1.0"
+npm install -g "github:xavierliang/hive-mp-publish#v0.1.1"
 hive-mp-publish doctor
 ```
 
@@ -89,7 +89,7 @@ Codex 默认目录如下；如果用户使用 Claude Code、Cursor 或其他 Age
 ```bash
 SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
 mkdir -p "$SKILLS_DIR"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/hive-mp-publish-skills.tar.gz" | tar -xz -C "$SKILLS_DIR"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1/hive-mp-publish-skills.tar.gz" | tar -xz -C "$SKILLS_DIR"
 ```
 
 安装后目标目录应包含：
@@ -104,11 +104,11 @@ apply-wechat-custom-theme/SKILL.md
 
 ```bash
 mkdir -p "$SKILLS_DIR/publish-to-wechat"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/publish-to-wechat.tar.gz" | tar -xz -C "$SKILLS_DIR/publish-to-wechat"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1/publish-to-wechat.tar.gz" | tar -xz -C "$SKILLS_DIR/publish-to-wechat"
 mkdir -p "$SKILLS_DIR/generate-wechat-theme"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/generate-wechat-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/generate-wechat-theme"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1/generate-wechat-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/generate-wechat-theme"
 mkdir -p "$SKILLS_DIR/apply-wechat-custom-theme"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.0/apply-wechat-custom-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/apply-wechat-custom-theme"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1/apply-wechat-custom-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/apply-wechat-custom-theme"
 ```
 
 ## 常见失败

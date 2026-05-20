@@ -1,6 +1,6 @@
 {
   "name": "hive-mp-publish",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Controlled-trial Gateway and CLI for publishing Markdown to WeChat MP drafts",
   "author": "Hive MP Publish contributors",
   "license": "Apache-2.0",
