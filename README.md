@@ -9,7 +9,7 @@
 - `publish`：单篇 Markdown 发布到公众号草稿箱，支持正文图、封面图、frontmatter。
 - `serve`：固定 IP Gateway，不持久化客户 `appSecret`，按 `appid` 做内存级 access_token 缓存。
 - `key`：SQLite API key issue / revoke / list，保存 key hash、调用计数和基础限流。
-- `credential`：客户本机保存公众号 `appid/appSecret`，server 不读取这份配置。
+- `credential`：客户本机保存公众号 `appid/appSecret` 和默认 Gateway API key，server 不读取这份配置。
 
 不包含 web 前台、账号系统、计费、多实例 HA。
 
@@ -61,14 +61,15 @@ hive-mp-publish serve --port 3000
 hive-mp-publish credential --set
 ```
 
+这一步可同时保存 Gateway API key；Gateway URL 默认使用 `https://mp.resopod.cn`。
+
 客户发布文章：
 
 ```bash
-hive-mp-publish publish -f article.md \
-  --app-id your-appid-or-local-alias \
-  --server https://mp-gateway.example.com \
-  --api-key hmp_live_xxx
+hive-mp-publish publish -f article.md --app-id your-appid-or-local-alias
 ```
+
+如需临时覆盖 Gateway，可在发布时显式传 `--server` 和 `--api-key`。
 
 本地联调可使用 `http://localhost:3000`。非 localhost 的 HTTP URL 会被 client 拒绝，只有受控测试可加 `--allow-insecure-http`。
 

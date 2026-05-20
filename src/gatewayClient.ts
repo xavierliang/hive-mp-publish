@@ -8,6 +8,7 @@ import {
     StyledContent,
 } from "@wenyan-md/core/wrapper";
 import { getInputContent } from "./utils.js";
+import { DEFAULT_GATEWAY_SERVER, loadGatewayCredential } from "./gatewayConfig.js";
 
 export interface GatewayPublishOptions extends ClientPublishOptions {
     appSecret?: string;
@@ -23,8 +24,9 @@ export async function renderAndPublishToGateway(
     inputContent: string | undefined,
     options: GatewayPublishOptions,
 ): Promise<string> {
-    const serverUrl = getGatewayUrl(options);
-    const headers = getGatewayHeaders(options);
+    const gateway = await resolveGatewayConnection(options);
+    const serverUrl = getGatewayUrl({ ...options, server: gateway.server });
+    const headers = getGatewayHeaders({ ...options, apiKey: gateway.apiKey });
     const credential = await resolveWechatCredential(options);
 
     await healthCheck(serverUrl);
@@ -68,7 +70,7 @@ export async function resolveWechatCredential(options: GatewayPublishOptions): P
 }
 
 export function getGatewayUrl(options: GatewayPublishOptions): string {
-    if (!options.server) throw new Error("Server mode requires --server.");
+    if (!options.server) throw new Error("Server mode requires --server or a configured Gateway URL.");
 
     const url = new URL(options.server);
     const isLocal = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(url.hostname);
@@ -80,7 +82,7 @@ export function getGatewayUrl(options: GatewayPublishOptions): string {
 }
 
 function getGatewayHeaders(options: GatewayPublishOptions): Record<string, string> {
-    if (!options.apiKey) throw new Error("Server mode requires --api-key.");
+    if (!options.apiKey) throw new Error("Server mode requires --api-key or a configured Gateway API key.");
     const headers: Record<string, string> = {
         "x-api-key": options.apiKey,
     };
@@ -88,6 +90,24 @@ function getGatewayHeaders(options: GatewayPublishOptions): Record<string, strin
         headers["x-client-version"] = options.clientVersion;
     }
     return headers;
+}
+
+export async function resolveGatewayConnection(
+    options: GatewayPublishOptions,
+): Promise<{ server: string; apiKey: string }> {
+    const storedGateway = await loadGatewayCredential();
+    const server =
+        options.server ||
+        process.env.HIVE_MP_GATEWAY_URL ||
+        storedGateway?.server ||
+        DEFAULT_GATEWAY_SERVER;
+    const apiKey = options.apiKey || process.env.HIVE_MP_API_KEY || storedGateway?.apiKey;
+
+    if (!apiKey) {
+        throw new Error("Server mode requires --api-key, HIVE_MP_API_KEY, or a saved Gateway API key.");
+    }
+
+    return { server, apiKey };
 }
 
 async function healthCheck(serverUrl: string): Promise<void> {

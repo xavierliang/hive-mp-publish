@@ -180,7 +180,7 @@ curl https://mp-gateway.example.com/health
 {
   "status": "ok",
   "service": "hive-mp-publish-gateway",
-  "version": "0.1.1"
+  "version": "0.1.2"
 }
 ```
 
@@ -206,8 +206,17 @@ node dist/cli.js credential --set
 - `AppID`
 - `AppSecret`
 - 可选别名 alias
+- 可选 Gateway API key，默认 Gateway URL 为 `https://mp.resopod.cn`
 
 之后发布时 `--app-id` 可以传真实 appid 或本地 alias。
+
+如需单独更新 Gateway API key 或切换 Gateway：
+
+```bash
+node dist/cli.js credential --set-gateway \
+  --server https://mp-gateway.example.com \
+  --api-key hmp_live_xxx
+```
 
 也可以使用 `.env`：
 
@@ -254,19 +263,14 @@ only_fans_can_comment: 0
 客户已执行 `credential --set` 时：
 
 ```bash
-node dist/cli.js publish -f article.md \
-  --app-id your-local-alias-or-appid \
-  --server https://mp-gateway.example.com \
-  --api-key hmp_live_xxx
+node dist/cli.js publish -f article.md --app-id your-local-alias-or-appid
 ```
 
 使用 `.env` 时：
 
 ```bash
 node dist/cli.js publish -f article.md \
-  --env-file .env \
-  --server https://mp-gateway.example.com \
-  --api-key hmp_live_xxx
+  --env-file .env
 ```
 
 临时显式传 secret 时：
@@ -274,9 +278,7 @@ node dist/cli.js publish -f article.md \
 ```bash
 node dist/cli.js publish -f article.md \
   --app-id wx123 \
-  --app-secret your-secret \
-  --server https://mp-gateway.example.com \
-  --api-key hmp_live_xxx
+  --app-secret your-secret
 ```
 
 成功后 CLI 返回：
@@ -338,7 +340,7 @@ docker run -d --name hive-mp-publish \
 
 ## 常见问题
 
-- `401 Missing API key`：客户端没有传 `--api-key`，或 curl 没传 `x-api-key`。
+- `401 Missing API key`：客户端没有保存 Gateway API key，也没有传 `--api-key`；curl 调试时则是没传 `x-api-key`。
 - `401 Invalid API key`：API key 错误、复制缺失，或 Gateway 启动时使用的不是同一个 SQLite `--db`。
 - `401 Revoked API key`：API key 已撤销，需要重新签发。
 - `429 Rate limit exceeded`：超过每分钟限流，默认 60 rpm；签发 key 时可设置 `--rate-limit-per-minute`。

@@ -11,7 +11,7 @@ description: "AI-ready skill to format and publish Markdown articles to WeChat O
 
 - **环境配置**：本地已通过 `hive-mp-publish credential --set` 配置公众号凭据，或提供 `.env`。
 - **依赖工具**：已安装或构建本仓库 CLI：`hive-mp-publish`。
-- **Gateway 配置**：默认通过固定 IP Gateway 发布，必须有 HTTPS Gateway URL 和 `hmp_live_...` API key。
+- **Gateway 配置**：默认通过固定 IP Gateway 发布。Gateway URL 默认是 `https://mp.resopod.cn`，API key 应保存在本地 `credential.json` 中；如缺失，使用 `hive-mp-publish credential --set-gateway --api-key <key>` 配置。
 - **安全边界**：不要把 appSecret、Gateway API key 或 access_token 写入日志或最终回复。
 
 ## 核心能力
@@ -47,25 +47,20 @@ source_url: https://example.com/original-article # 可选，原文链接
 
 ### 1. 标准发布 (通过 Gateway，推荐)
 ```bash
-hive-mp-publish publish -f my-article.md \
-  --app-id "<local-alias-or-appid>" \
-  --server "https://mp-gateway.example.com" \
-  --api-key "hmp_live_xxx"
+hive-mp-publish publish -f my-article.md --app-id "<local-alias-or-appid>"
 ```
 
 ### 2. 指定内置主题与高亮发布 (通过 Gateway)
 ```bash
 hive-mp-publish publish -f article.md \
   --app-id "<local-alias-or-appid>" \
-  --server "https://mp-gateway.example.com" \
-  --api-key "hmp_live_xxx" \
   -t orangeheart \
   -h solarized-light
 ```
 
 ### 3. 本机直连发布 (仅限本机 IP 已加入微信白名单)
 ```bash
-hive-mp-publish publish -f article.md --app-id "<local-alias-or-appid>"
+hive-mp-publish publish -f article.md --app-id "<local-alias-or-appid>" --local
 ```
 
 ### 4. 列出所有可用主题
@@ -76,7 +71,7 @@ hive-mp-publish theme -l
 ## 故障排除 (Agent 专用)
 
 - **IP 限制错误 (invalid ip)**：提醒用户将 Gateway 固定公网 IP 加入微信后台的“IP 白名单”。
-- **401 Missing API key / 401 Invalid API key**：检查 `--api-key` 是否存在、是否被撤销，且不要在日志中打印完整 key。
+- **401 Missing API key / 401 Invalid API key**：检查是否已保存 Gateway API key：`hive-mp-publish credential --show-gateway`；如需轮换，运行 `hive-mp-publish credential --set-gateway --api-key <key>`。不要在日志中打印完整 key。
 - **AppID/Secret 错误**：检查本地凭据、`.env` 或发布命令传入的 AppID/Secret。
 - **图片上传失败**：确认 Markdown 中的本地图片路径在当前目录中真实存在。
 - **发布排版不符预期**：检查 YAML Frontmatter 是否符合规范。

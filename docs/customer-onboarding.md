@@ -27,7 +27,16 @@
 node dist/cli.js credential --set
 ```
 
-这一步会把 `appid/appSecret` 存在客户本机配置目录。Gateway 不保存公众号 secret。
+这一步会把 `appid/appSecret` 存在客户本机配置目录，并可同时保存 Gateway API key。Gateway URL 默认是 `https://mp.resopod.cn`，客户通常不需要输入。
+
+如需之后单独更新 Gateway API key 或切换 Gateway：
+
+```bash
+node dist/cli.js credential --set-gateway --api-key hmp_live_xxx
+node dist/cli.js credential --set-gateway --server https://other-gateway.example.com --api-key hmp_live_xxx
+```
+
+Gateway 不保存公众号 secret。
 
 也可以用 `.env`：
 
@@ -42,16 +51,14 @@ WECHAT_APP_SECRET=your-secret
 
 ```bash
 node dist/cli.js publish -f article.md \
-  --app-id your-local-alias-or-appid \
-  --server https://mp-gateway.example.com \
-  --api-key hmp_live_xxx
+  --app-id your-local-alias-or-appid
 ```
 
 发布成功后返回 `Media ID`，客户可以在微信公众号后台草稿箱看到图文草稿。
 
 ## 5. 常见错误
 
-- `401 Missing API key`：没有传 `--api-key`。
+- `401 Missing API key`：没有传 `--api-key`，也没有保存 Gateway API key。
 - `401 Invalid API key`：API key 错误或已撤销。
 - `429 Rate limit exceeded`：超过每分钟限流。
 - `缺少必要参数：appSecret`：本机没有配置公众号 secret，也没有传 `--app-secret`。

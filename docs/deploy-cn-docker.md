@@ -136,10 +136,11 @@ curl -fsS https://your-gateway-domain/health
 客户发布时使用 HTTPS Gateway URL：
 
 ```bash
-hive-mp-publish publish -f article.md \
-  --app-id customer-local-alias-or-wx-appid \
+hive-mp-publish credential --set-gateway \
   --server https://your-gateway-domain \
   --api-key hmp_live_xxx
+
+hive-mp-publish publish -f article.md --app-id customer-local-alias-or-wx-appid
 ```
 
 ## 回滚

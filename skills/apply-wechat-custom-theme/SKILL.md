@@ -12,7 +12,7 @@ description: "AI-ready skill to test, register, and publish Markdown articles to
 - **环境配置**：本地已通过 `hive-mp-publish credential --set` 配置公众号凭据，或提供 `.env`。
 - **依赖工具**：已安装或构建本仓库 CLI：`hive-mp-publish`。
 - **必要文件**：本地已存在 Markdown 文件 (`.md`) 和 CSS 主题文件 (`.css`)。
-- **Gateway 配置**：默认通过固定 IP Gateway 发布，必须有 HTTPS Gateway URL 和 `hmp_live_...` API key。
+- **Gateway 配置**：默认通过固定 IP Gateway 发布。Gateway URL 默认是 `https://mp.resopod.cn`，API key 应保存在本地 `credential.json` 中；如缺失，使用 `hive-mp-publish credential --set-gateway --api-key <key>` 配置。
 - **安全边界**：不要把 appSecret、Gateway API key 或 access_token 写入日志或最终回复。
 
 ## 核心能力
@@ -43,14 +43,12 @@ description: "AI-ready skill to test, register, and publish Markdown articles to
     ```bash
     hive-mp-publish publish -f <markdown_file_path> \
       -c <css_file_path> \
-      --app-id "<local-alias-or-appid>" \
-      --server "https://mp-gateway.example.com" \
-      --api-key "hmp_live_xxx"
+      --app-id "<local-alias-or-appid>"
     ```
 - **可选参数**：
     - `--no-mac-style`：禁用代码块 Mac 风格窗口。
     - `-h <highlight_theme>`：指定代码高亮主题（如 `atom-one-dark`）。
-- **本机直连例外**：只有当前机器 IP 已加入微信后台白名单时，才可以省略 `--server` 和 `--api-key`。
+- **本机直连例外**：只有当前机器 IP 已加入微信后台白名单时，才可以加 `--local` 绕过已保存的 Gateway 配置。
 
 ### Step 3: 注册主题 (Register Theme) [按需]
 
@@ -66,5 +64,5 @@ description: "AI-ready skill to test, register, and publish Markdown articles to
 
 - **文件不存在**：检查 `ENOENT` 报错，确认 Markdown 或 CSS 文件路径是否正确。
 - **样式未生效**：检查 CSS 选择器是否缺少 `#wenyan` 前缀。
-- **401 Missing API key / 401 Invalid API key**：检查 `--api-key` 是否存在、是否被撤销，且不要在日志中打印完整 key。
+- **401 Missing API key / 401 Invalid API key**：检查是否已保存 Gateway API key：`hive-mp-publish credential --show-gateway`；如需轮换，运行 `hive-mp-publish credential --set-gateway --api-key <key>`。不要在日志中打印完整 key。
 - **凭证错误**：如果微信 API 返回 `invalid credential`，提示用户检查本地凭据、`.env` 或发布命令传入的 AppID/Secret。

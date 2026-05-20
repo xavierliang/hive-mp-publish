@@ -18,14 +18,14 @@
 ```bash
 node --version
 npm --version
-npm install -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1/hive-mp-publish-0.1.1.tgz"
+npm install -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/hive-mp-publish-0.1.2.tgz"
 hive-mp-publish doctor
 ```
 
 如果 Release tarball 暂时不可用，可以从 GitHub 仓库源码安装：
 
 ```bash
-npm install -g "github:xavierliang/hive-mp-publish#v0.1.1"
+npm install -g "github:xavierliang/hive-mp-publish#v0.1.2"
 hive-mp-publish doctor
 ```
 
@@ -38,18 +38,17 @@ hive-mp-publish credential --set
 hive-mp-publish doctor
 ```
 
-配置时可以给 AppID 设置一个别名，后续发布时用 `--app-id <alias>`。
+配置时可以给 AppID 设置一个别名，后续发布时用 `--app-id <alias>`。如果已拿到 Gateway API key，也可以在同一流程中保存；默认 Gateway URL 为 `https://mp.resopod.cn`。
 
 ## 发布文章
 
 通过固定 IP Gateway 发布到微信公众号草稿箱：
 
 ```bash
-hive-mp-publish publish -f article.md \
-  --app-id "<local-alias-or-appid>" \
-  --server "https://mp-gateway.example.com" \
-  --api-key "hmp_live_xxx"
+hive-mp-publish publish -f article.md --app-id "<local-alias-or-appid>"
 ```
+
+如需切换 Gateway 或轮换 API key，运行 `hive-mp-publish credential --set-gateway --server <url> --api-key <key>`。
 
 Markdown 需要包含 frontmatter：
 
@@ -89,7 +88,7 @@ Codex 默认目录如下；如果用户使用 Claude Code、Cursor 或其他 Age
 ```bash
 SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
 mkdir -p "$SKILLS_DIR"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1/hive-mp-publish-skills.tar.gz" | tar -xz -C "$SKILLS_DIR"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/hive-mp-publish-skills.tar.gz" | tar -xz -C "$SKILLS_DIR"
 ```
 
 安装后目标目录应包含：
@@ -104,11 +103,11 @@ apply-wechat-custom-theme/SKILL.md
 
 ```bash
 mkdir -p "$SKILLS_DIR/publish-to-wechat"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1/publish-to-wechat.tar.gz" | tar -xz -C "$SKILLS_DIR/publish-to-wechat"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/publish-to-wechat.tar.gz" | tar -xz -C "$SKILLS_DIR/publish-to-wechat"
 mkdir -p "$SKILLS_DIR/generate-wechat-theme"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1/generate-wechat-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/generate-wechat-theme"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/generate-wechat-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/generate-wechat-theme"
 mkdir -p "$SKILLS_DIR/apply-wechat-custom-theme"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1/apply-wechat-custom-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/apply-wechat-custom-theme"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/apply-wechat-custom-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/apply-wechat-custom-theme"
 ```
 
 ## 常见失败
@@ -117,5 +116,5 @@ curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.1
 - `doctor` 提示 Node 版本过低：安装 Node.js 22.19+，Gateway/server 推荐 Node.js 24。
 - `doctor` 提示凭据未配置：运行 `hive-mp-publish credential --set`。
 - 微信返回 IP 白名单错误：确认添加的是 Gateway 固定公网 IP，不是客户本机 IP。
-- `401 Missing API key` 或 `401 Invalid API key`：检查 `--api-key` 是否正确、是否被撤销。
+- `401 Missing API key` 或 `401 Invalid API key`：运行 `hive-mp-publish credential --show-gateway` 检查本机是否保存 Gateway API key；如需轮换，运行 `hive-mp-publish credential --set-gateway --api-key <key>`。
 - `缺少必要参数：appSecret`：客户本机未配置凭据，或 `--app-id`/别名不匹配。

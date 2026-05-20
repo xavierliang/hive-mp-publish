@@ -24,12 +24,21 @@ import password from "@inquirer/password";
 import { loadEnvFile } from "node:process";
 import { renderAndPublishToGateway } from "./gatewayClient.js";
 import { redactSensitive } from "./security.js";
+import {
+    clearGatewayCredential,
+    DEFAULT_GATEWAY_SERVER,
+    getCredentialPath,
+    loadGatewayCredential,
+    redactApiKey,
+    saveGatewayCredential,
+} from "./gatewayConfig.js";
 
 interface CLIPublishOptions extends ClientPublishOptions {
     appSecret?: string;
     allowInsecureHttp?: boolean;
     proxy?: string;
     envFile?: string;
+    local?: boolean;
 }
 
 export function createProgram(version: string = pkg.version): Command {
@@ -65,6 +74,7 @@ export function createProgram(version: string = pkg.version): Command {
         .option("--app-secret <appSecret>", "AppSecret for server mode; prefer local credential/env for routine use")
         .option("--server <url>", "Gateway URL to publish through (must be HTTPS except localhost)")
         .option("--api-key <apiKey>", "API key for the remote Gateway")
+        .option("--local", "Bypass configured Gateway and publish directly from this machine")
         .option("--allow-insecure-http", "Allow non-HTTPS Gateway URL for controlled testing")
         .option("--env-file <file>", "Path to a .env file to load environment variables from")
         .option("--proxy <url>", "Proxy URL to use for requests, ex: http://127.0.0.1:1080")
@@ -76,7 +86,7 @@ export function createProgram(version: string = pkg.version): Command {
 
                 await setupProxy(options.proxy);
 
-                if (options.server) {
+                if (await shouldPublishThroughGateway(options)) {
                     options.clientVersion = version;
                     const mediaId = await renderAndPublishToGateway(inputContent, options);
                     console.log(`发布成功，Media ID: ${mediaId}`);
@@ -176,14 +186,40 @@ export function createProgram(version: string = pkg.version): Command {
         .description("Manage local WeChat credentials used by the client")
         .option("-l, --location", "Get the storage location of configuration credentials")
         .option("-s, --set", "Interactively set the WeChat credentials (AppID & AppSecret)")
-        .action(async (options: { location?: boolean; set?: boolean }) => {
+        .option("--set-gateway", "Set the default Gateway URL and API key")
+        .option("--show-gateway", "Show the saved Gateway configuration")
+        .option("--clear-gateway", "Remove the saved Gateway configuration")
+        .option("--server <url>", "Gateway URL to save")
+        .option("--api-key <apiKey>", "Gateway API key to save")
+        .action(async (options: {
+            location?: boolean;
+            set?: boolean;
+            setGateway?: boolean;
+            showGateway?: boolean;
+            clearGateway?: boolean;
+            server?: string;
+            apiKey?: string;
+        }) => {
             if (Object.keys(options).length === 0) {
                 program.commands.find((c) => c.name() === "credential")?.outputHelp();
                 return;
             }
             await runCommandWrapper(async () => {
                 if (options.location) {
-                    console.log(path.join(configDir, "credential.json"));
+                    console.log(getCredentialPath());
+                    return;
+                }
+                if (options.showGateway) {
+                    await showGatewayCredential();
+                    return;
+                }
+                if (options.clearGateway) {
+                    const cleared = await clearGatewayCredential();
+                    console.log(cleared ? "Gateway 配置已删除。" : "没有已保存的 Gateway 配置。");
+                    return;
+                }
+                if (options.setGateway || options.server || options.apiKey) {
+                    await setGatewayCredential(options);
                     return;
                 }
                 if (options.set) {
@@ -206,6 +242,7 @@ export function createProgram(version: string = pkg.version): Command {
 
                     await credentialStore.saveWechatCredential(appId.trim(), appSecret.trim(), alias.trim() || null);
                     console.log("微信凭据已保存到本机配置目录。");
+                    await maybeSetGatewayCredential();
                 }
             });
         });
@@ -242,6 +279,86 @@ export function createProgram(version: string = pkg.version): Command {
         });
 
     return program;
+}
+
+async function shouldPublishThroughGateway(options: CLIPublishOptions): Promise<boolean> {
+    if (options.local) return false;
+    if (options.server || options.apiKey || process.env.HIVE_MP_GATEWAY_URL || process.env.HIVE_MP_API_KEY) {
+        return true;
+    }
+
+    const storedGateway = await loadGatewayCredential();
+    return Boolean(storedGateway?.apiKey);
+}
+
+async function maybeSetGatewayCredential(): Promise<void> {
+    const existingGateway = await loadGatewayCredential();
+    if (existingGateway?.apiKey) {
+        console.log(`Gateway 已配置：${existingGateway.server || DEFAULT_GATEWAY_SERVER}`);
+        return;
+    }
+
+    console.log(`默认 Gateway: ${DEFAULT_GATEWAY_SERVER}`);
+    const apiKey = await password({
+        message: "Gateway API Key (可选，按回车跳过):",
+        mask: true,
+        validate: () => true,
+    });
+
+    if (!apiKey.trim()) {
+        console.log("已跳过 Gateway 配置。");
+        return;
+    }
+
+    await saveGatewayCredential({
+        server: DEFAULT_GATEWAY_SERVER,
+        apiKey: apiKey.trim(),
+    });
+    console.log("Gateway 配置已保存到本机配置目录。");
+}
+
+async function setGatewayCredential(options: { server?: string; apiKey?: string }): Promise<void> {
+    const existingGateway = await loadGatewayCredential();
+    const server = normalizeGatewayServer(options.server || existingGateway?.server || DEFAULT_GATEWAY_SERVER);
+    let apiKey = options.apiKey?.trim();
+
+    if (!apiKey) {
+        const currentHint = existingGateway?.apiKey ? "按回车保留当前 API key" : "必填";
+        const entered = await password({
+            message: `Gateway API Key (${currentHint}):`,
+            mask: true,
+            validate: (value) =>
+                existingGateway?.apiKey ? true : value.trim().length > 0 || "Gateway API Key 不能为空",
+        });
+        apiKey = entered.trim() || existingGateway?.apiKey;
+    }
+
+    if (!apiKey) {
+        throw new Error("Gateway API Key 不能为空。");
+    }
+
+    await saveGatewayCredential({ server, apiKey });
+    console.log(`Gateway URL: ${server}`);
+    console.log(`Gateway API Key: ${redactApiKey(apiKey)}`);
+    console.log("Gateway 配置已保存到本机配置目录。");
+}
+
+async function showGatewayCredential(): Promise<void> {
+    const gateway = await loadGatewayCredential();
+    console.log(`Gateway URL: ${gateway?.server || DEFAULT_GATEWAY_SERVER}${gateway?.server ? "" : " (default)"}`);
+    console.log(`Gateway API Key: ${redactApiKey(gateway?.apiKey)}`);
+}
+
+function normalizeGatewayServer(rawServer: string): string {
+    const server = rawServer.trim();
+    if (!server) throw new Error("Gateway URL 不能为空。");
+
+    const url = new URL(server);
+    const isLocal = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(url.hostname);
+    if (url.protocol !== "https:" && !isLocal) {
+        throw new Error("Remote Gateway URL must use HTTPS.");
+    }
+    return url.toString().replace(/\/$/, "");
 }
 
 function addKeyCommands(program: Command): void {
@@ -374,7 +491,7 @@ async function runDoctor(version: string): Promise<void> {
         detail: configDir,
     });
 
-    const credentialPath = path.join(configDir, "credential.json");
+    const credentialPath = getCredentialPath();
     checks.push({
         label: "WeChat credential",
         status: existsSync(credentialPath) ? "ok" : "warn",
