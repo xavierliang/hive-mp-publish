@@ -43,7 +43,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --fix",
     "cli": "tsx ./src/cli.ts",
+    "cli:bun": "bun ./src/cli.ts",
     "test:bin": "pnpm build && node ./dist/cli.js render -f tests/publish.md -c tests/manhua.css --no-mac-style",
+    "test:bun:smoke": "pnpm build && bun scripts/bun-smoke.mjs",
     "test:realPublish": "pnpm build && node ./dist/cli.js publish -f tests/publish.md -t phycat --env-file=.env.test",
     "test:serverPublish": "pnpm build && node ./dist/cli.js publish -f tests/publish.md -c tests/manhua.css --no-mac-style --server http://localhost:3000 --allow-insecure-http --api-key \"$HIVE_MP_API_KEY\" --env-file=.env.test",
     "test:serve": "pnpm build && node ./dist/cli.js serve --env-file=.env.test"
