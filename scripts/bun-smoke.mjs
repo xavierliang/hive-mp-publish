@@ -166,9 +166,10 @@ async function parserProbe(ctx) {
     const probeResult = run(bunBin, [probe, fixture], ctx);
     exit(probeResult, 0, "parser probe");
     const parsed = JSON.parse(probeResult.stdout);
-    for (const key of ["HIVE_MP_SMOKE_EXPORT", "HIVE_MP_SMOKE_WHITESPACE_TRIM", "HIVE_MP_SMOKE_SQUOTE", "HIVE_MP_SMOKE_DQUOTE"]) {
-        present(parsed, key);
-    }
+    equals(parsed.HIVE_MP_SMOKE_EXPORT, "exported value", "export prefix");
+    equals(parsed.HIVE_MP_SMOKE_WHITESPACE_TRIM, "trimmed value", "whitespace trim");
+    equals(parsed.HIVE_MP_SMOKE_SQUOTE, "single quoted value", "single quoted value");
+    equals(parsed.HIVE_MP_SMOKE_DQUOTE, "double quoted value", "double quoted value");
     includes(parsed.HIVE_MP_SMOKE_SQUOTE_MULTILINE, "\n", "single quoted multiline");
     includes(parsed.HIVE_MP_SMOKE_DQUOTE_MULTILINE, "\n", "double quoted multiline");
     includes(parsed.HIVE_MP_SMOKE_HASH_INSIDE_QUOTES, "#", "quoted hash");
@@ -204,6 +205,10 @@ async function proxy(ctx) {
     nonzero(envProxy, "HTTPS_PROXY network failure");
     includes(envProxy.stderr, "[Proxy] Bun runtime detected", "HTTPS_PROXY warning");
     ok(!/--proxy.*not supported/i.test(envProxy.stderr), "HTTPS_PROXY path failed as explicit proxy");
+    ok(
+        /Unable to connect|ECONNREFUSED|Connection refused|fetch failed|NetworkError/i.test(output(envProxy)),
+        "HTTPS_PROXY did not reach network stage",
+    );
 }
 async function startServe(ctx, db) {
     let lastError;
@@ -324,8 +329,8 @@ function exit(result, status, label) {
 function nonzero(result, label) {
     if (result.status === 0) throw new Error(`${label} unexpectedly exited 0\n${format(result)}`);
 }
-function present(record, key) {
-    ok(Object.hasOwn(record, key) && typeof record[key] === "string" && record[key].length > 0, `${key} missing`);
+function equals(actual, expected, label) {
+    ok(actual === expected, `${label} mismatch: ${JSON.stringify(actual)}`);
 }
 function includes(text, expected, label) {
     ok(String(text).includes(expected), `${label} missing ${expected}`);
