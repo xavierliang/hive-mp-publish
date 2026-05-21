@@ -11,6 +11,8 @@
 - Node.js 需要 `>=22.19`；Gateway/server 模式推荐 Node.js 24。
 - 远程 Gateway URL 必须使用 HTTPS。HTTP 只用于 localhost 联调。
 
+本文保持 Node/npm-first，匹配 `npm install -g` 后的默认入口。若用户已经安装 Bun 并从源码构建后运行，可以把 `node ./dist/cli.js` 替换为 `bun ./dist/cli.js`；具体限制见 README 的 “Running with Bun”。安装流程不要尝试自动检测或切换到 Bun。
+
 ## 安装 CLI
 
 优先从 GitHub Release tarball 安装固定版本：

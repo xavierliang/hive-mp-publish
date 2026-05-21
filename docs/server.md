@@ -34,6 +34,18 @@ node dist/cli.js serve \
 export HIVE_MP_GATEWAY_DB=/var/lib/hive-mp-publish/gateway.sqlite
 ```
 
+### Bun 运行时
+
+已经安装 Bun 时，Gateway 可以用同一份构建产物启动：
+
+```bash
+bun ./dist/cli.js serve \
+  --port 3000 \
+  --db /var/lib/hive-mp-publish/gateway.sqlite
+```
+
+Bun 路径支持同样的 `serve --help`、`--db`、`--env-file` 和 `--port` 参数。生产环境目前仍推荐 Node 入口，直到 Bun server 路径有更多现场验证。
+
 ## 接口
 
 ### `GET /health`

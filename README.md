@@ -41,6 +41,18 @@ pnpm build
 node dist/cli.js doctor
 ```
 
+## Running with Bun
+
+`npm install -g` 安装后的 `hive-mp-publish` 入口仍默认使用 Node，作为稳定路径维护。已经安装 Bun 的用户可以在源码构建后直接运行同一份 `dist`：
+
+```bash
+bun ./dist/cli.js --help
+bun ./dist/cli.js doctor
+bun ./dist/cli.js serve --port 3000
+```
+
+当前支持的是用 Bun 运行 `dist/cli.js`，不承诺 `bun build --compile` 或单文件可执行产物。Bun 下显式 `--proxy` 不支持；如果设置了 `HTTPS_PROXY` / `HTTP_PROXY` / `ALL_PROXY`，CLI 会提示并依赖 Bun 原生 `fetch` 处理这些环境变量。需要 undici 级代理拦截时请使用 Node 入口。
+
 在 Gateway 机器上签发一个客户 API key：
 
 ```bash

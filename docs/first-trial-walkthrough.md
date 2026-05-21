@@ -2,6 +2,8 @@
 
 本文用于把 `hive-mp-publish` 跑通到第一个真实公众号草稿箱。
 
+> 本 walkthrough 保持 Node-first。若你已经安装 Bun 并希望使用它，源码构建后的等价命令是把 `node ./dist/cli.js` 替换为 `bun ./dist/cli.js`；详见 README 的 “Running with Bun”。不要为 Bun 复制一套逐条命令。
+
 ## 整体链路和边界
 
 试点链路：
