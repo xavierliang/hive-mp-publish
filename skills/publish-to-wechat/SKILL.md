@@ -18,23 +18,28 @@ description: "AI-ready skill to format and publish Markdown articles to WeChat O
 
 - **自动化排版**：支持多种内置主题（如 `orangeheart`）和代码高亮方案。
 - **智能素材处理**：自动解析 Markdown 中的本地或网络图片，并同步上传至微信素材库。
-- **元数据驱动**：通过 YAML Frontmatter 自动配置文章标题、封面、作者和原文链接。
+- **元数据驱动**：通过 YAML Frontmatter 配置文章标题、封面、作者、原文链接、正文导语和评论选项。
 - **高度可定制**：支持自定义 CSS 主题注入，满足个性化品牌视觉。
 
 ## AI Agent 指令指南：发布流程规范
 
-### Frontmatter 约束 (必须包含)
+### Frontmatter 约束
 
-文章开头 **必须** 包含以下 YAML 块，否则发布接口将返回错误：
+文章开头应包含 YAML Frontmatter。`title` 是必填字段；`cover` 可选，但如果未提供 `cover`，正文中必须至少有一张图片，发布时会使用正文第一张图作为封面。
 
 ```yaml
 ---
 title: 文章标题
-cover: ./cover.jpg # 若缺省则自动取正文第一张图
+cover: ./cover.jpg # 可选；缺省时自动取正文第一张图作为封面
 author: 作者名称 # 可选
 source_url: https://example.com/original-article # 可选，原文链接
+description: 文章导语 # 可选；会渲染为正文开头的引用块
+need_open_comment: 1 # 可选，开启留言
+only_fans_can_comment: 0 # 可选，仅粉丝可留言
 ---
 ```
+
+如果既没有 `cover`，正文里也没有图片，发布会失败并提示必须指定封面图或在正文中至少出现一张图片。
 
 ### 核心参数说明
 
