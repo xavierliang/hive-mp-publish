@@ -21,8 +21,9 @@ import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import input from "@inquirer/input";
 import password from "@inquirer/password";
-import { loadEnvFile } from "node:process";
+import { loadEnvFile } from "./env.js";
 import { renderAndPublishToGateway } from "./gatewayClient.js";
+import { isBun, runtimeLabel, runtimeVersion } from "./runtime.js";
 import { redactSensitive } from "./security.js";
 import {
     clearGatewayCredential,
@@ -474,9 +475,17 @@ async function runDoctor(version: string): Promise<void> {
     const nodeVersion = process.versions.node;
 
     checks.push({
+        label: "Runtime",
+        status: "ok",
+        detail: `${runtimeLabel()} ${isBun ? runtimeVersion() : `v${runtimeVersion()}`}`,
+    });
+
+    checks.push({
         label: "Node.js",
-        status: isAtLeastVersion(nodeVersion, minimumNode) ? "ok" : "warn",
-        detail: `${process.version} (requires >=${minimumNode}; Node 24 is recommended for Gateway/server mode)`,
+        status: isBun || !isAtLeastVersion(nodeVersion, minimumNode) ? "warn" : "ok",
+        detail: isBun
+            ? `${process.version} reported by Bun (Node runtime requires >=${minimumNode}; Node 24 is recommended for Gateway/server mode)`
+            : `${process.version} (requires >=${minimumNode}; Node 24 is recommended for Gateway/server mode)`,
     });
 
     checks.push({
@@ -506,6 +515,14 @@ async function runDoctor(version: string): Promise<void> {
         status: themes.length > 0 ? "ok" : "fail",
         detail: `${themes.length} available`,
     });
+
+    if (isBun && getProxyEnvUrl()) {
+        checks.push({
+            label: "Proxy",
+            status: "warn",
+            detail: "HTTPS_PROXY / HTTP_PROXY rely on Bun's native fetch; undici-based interception is unsupported.",
+        });
+    }
 
     console.log("hive-mp-publish doctor");
     for (const check of checks) {
@@ -556,20 +573,41 @@ function isAtLeastVersion(actual: string, minimum: string): boolean {
 }
 
 async function setupProxy(proxyUrl?: string) {
-    const url =
-        proxyUrl ||
-        process.env.HTTPS_PROXY ||
-        process.env.https_proxy ||
-        process.env.HTTP_PROXY ||
-        process.env.http_proxy ||
-        process.env.ALL_PROXY;
+    const explicitProxyUrl = proxyUrl?.trim();
+    const envProxyUrl = getProxyEnvUrl();
+
+    if (isBun) {
+        if (explicitProxyUrl) {
+            throw new Error(
+                "--proxy is not supported under the Bun runtime; use Node or set HTTPS_PROXY in your shell instead.",
+            );
+        }
+        if (envProxyUrl) {
+            console.error(
+                "[Proxy] Bun runtime detected; HTTPS_PROXY / HTTP_PROXY rely on Bun's native fetch; undici-based interception is unsupported.",
+            );
+        }
+        return;
+    }
+
+    const url = explicitProxyUrl || envProxyUrl;
     if (!url) return;
     const { ProxyAgent, setGlobalDispatcher, install } = await import("undici");
-    const cleanUrl = url.trim();
-    const agent = new ProxyAgent(cleanUrl);
+    const agent = new ProxyAgent(url);
     setGlobalDispatcher(agent);
     install();
-    console.error(`[Proxy] Global fetch proxy enabled: ${redactSensitive(cleanUrl)}`);
+    console.error(`[Proxy] Global fetch proxy enabled: ${redactSensitive(url)}`);
+}
+
+function getProxyEnvUrl(): string | undefined {
+    return (
+        process.env.HTTPS_PROXY?.trim() ||
+        process.env.https_proxy?.trim() ||
+        process.env.HTTP_PROXY?.trim() ||
+        process.env.http_proxy?.trim() ||
+        process.env.ALL_PROXY?.trim() ||
+        undefined
+    );
 }
 
 export const program = createProgram();

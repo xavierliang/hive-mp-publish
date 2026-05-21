@@ -1,8 +1,8 @@
-import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { configDir } from "@wenyan-md/core/wrapper";
 import { constantTimeEqualHex, generateApiKey, publicKeyPrefix, sha256Hex } from "./security.js";
+import { openDatabase as openSqliteDatabase, type SqliteDatabase } from "./sqlite.js";
 
 export const DEFAULT_RATE_LIMIT_PER_MINUTE = 60;
 
@@ -71,14 +71,14 @@ export function currentUsageMonth(date = new Date()): string {
 }
 
 export class ApiKeyStore {
-    private readonly db: DatabaseSync;
+    private readonly db: SqliteDatabase;
     private closed = false;
 
     constructor(readonly dbPath: string = getDefaultGatewayDbPath()) {
         if (dbPath !== ":memory:") {
             fs.mkdirSync(path.dirname(dbPath), { recursive: true });
         }
-        this.db = new DatabaseSync(dbPath);
+        this.db = openSqliteDatabase(dbPath);
         this.migrate();
     }
 
