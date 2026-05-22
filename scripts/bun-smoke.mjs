@@ -13,6 +13,9 @@ const fixturePublishMd = path.join(repoRoot, "tests", "publish.md");
 const fixtureManhuaCss = path.join(repoRoot, "tests", "manhua.css");
 const nodeBin = resolveNodeBin();
 const bunBin = resolveBunBin();
+const DEFAULT_CHILD_TIMEOUT_MS = 30_000;
+const SERVE_CHILD_TIMEOUT_MS = 60_000;
+const CHILD_KILL_GRACE_MS = 1_000;
 async function main() {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "hive-mp-bun-smoke-"));
     const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, "package.json"), "utf-8"));
@@ -119,6 +122,7 @@ async function envRoute(ctx, name, preset) {
         const envPath = writeEnv(ctx, name, pair.envFile.port);
         const env = preset ? { ...ctx.env, HIVE_MP_GATEWAY_URL: `http://localhost:${pair.preset.port}` } : ctx.env;
         const result = await cliAsync(ctx, ["publish", "-f", fixturePublishMd, "--env-file", envPath, "--allow-insecure-http"], env);
+        assertProcessCompleted(result, `${name} publish`);
         const hit = preset ? pair.preset.requests : pair.envFile.requests;
         const miss = preset ? pair.envFile.requests : pair.preset.requests;
         ok(hit.length > 0, `${name} expected gateway was not contacted`);
@@ -170,8 +174,8 @@ async function parserProbe(ctx) {
     equals(parsed.HIVE_MP_SMOKE_WHITESPACE_TRIM, "trimmed value", "whitespace trim");
     equals(parsed.HIVE_MP_SMOKE_SQUOTE, "single quoted value", "single quoted value");
     equals(parsed.HIVE_MP_SMOKE_DQUOTE, "double quoted value", "double quoted value");
-    includes(parsed.HIVE_MP_SMOKE_SQUOTE_MULTILINE, "\n", "single quoted multiline");
-    includes(parsed.HIVE_MP_SMOKE_DQUOTE_MULTILINE, "\n", "double quoted multiline");
+    equals(parsed.HIVE_MP_SMOKE_SQUOTE_MULTILINE, "single\nquoted\nvalue", "single quoted multiline");
+    equals(parsed.HIVE_MP_SMOKE_DQUOTE_MULTILINE, "double\nquoted\nvalue", "double quoted multiline");
     includes(parsed.HIVE_MP_SMOKE_HASH_INSIDE_QUOTES, "#", "quoted hash");
     ok(parsed.HIVE_MP_SMOKE_INLINE_COMMENT_NOSPACE === "value", "inline comment without space mismatch");
     ok(parsed.HIVE_MP_SMOKE_INLINE_COMMENT_WITH_SPACE === "value", "inline comment with space mismatch");
@@ -223,6 +227,7 @@ async function startServe(ctx, db) {
         child.stderrText = "";
         child.stdout.on("data", (chunk) => (child.stdoutText += chunk));
         child.stderr.on("data", (chunk) => (child.stderrText += chunk));
+        armChildTimeout(child, SERVE_CHILD_TIMEOUT_MS, `serve on port ${port}`);
         try {
             await waitHealth(port, child);
             return { child, port };
@@ -299,17 +304,60 @@ function childEnv(tmp) {
         HIVE_MP_GATEWAY_DB: path.join(tmp, "default-gateway.sqlite"),
     };
 }
-function cli(ctx, args, env = ctx.env) { return run(bunBin, [cliJs, ...args], ctx, env); }
-function cliAsync(ctx, args, env = ctx.env) { return runAsync(bunBin, [cliJs, ...args], ctx, env); }
-function run(bin, args, ctx, env = ctx.env) { return spawnSync(bin, args, { cwd: ctx.tmp, env, encoding: "utf-8", maxBuffer: 20 * 1024 * 1024 }); }
-function runAsync(bin, args, ctx, env = ctx.env) {
+function cli(ctx, args, env = ctx.env, options = {}) { return run(bunBin, [cliJs, ...args], ctx, env, options); }
+function cliAsync(ctx, args, env = ctx.env, options = {}) { return runAsync(bunBin, [cliJs, ...args], ctx, env, options); }
+function run(bin, args, ctx, env = ctx.env, options = {}) {
+    const timeoutMs = options.timeoutMs ?? DEFAULT_CHILD_TIMEOUT_MS;
+    const result = spawnSync(bin, args, {
+        cwd: ctx.tmp,
+        env,
+        encoding: "utf-8",
+        maxBuffer: 20 * 1024 * 1024,
+        timeout: timeoutMs,
+        killSignal: "SIGKILL",
+    });
+    return {
+        ...result,
+        stdout: result.stdout || "",
+        stderr: result.stderr || "",
+        timedOut: result.error?.code === "ETIMEDOUT",
+        command: commandText(bin, args),
+        timeoutMs,
+    };
+}
+function runAsync(bin, args, ctx, env = ctx.env, options = {}) {
+    const timeoutMs = options.timeoutMs ?? DEFAULT_CHILD_TIMEOUT_MS;
+    const command = commandText(bin, args);
     return new Promise((resolve, reject) => {
         const child = spawn(bin, args, { cwd: ctx.tmp, env, stdio: ["ignore", "pipe", "pipe"] });
         let stdout = "", stderr = "";
+        let timedOut = false;
+        let forceKill;
+        const timeout = setTimeout(() => {
+            timedOut = true;
+            stderr += `\nTimed out after ${timeoutMs}ms: ${scrub(command)}\n`;
+            child.kill("SIGTERM");
+            forceKill = setTimeout(() => {
+                stderr += `Process ignored SIGTERM after timeout; sent SIGKILL\n`;
+                child.kill("SIGKILL");
+            }, CHILD_KILL_GRACE_MS);
+            forceKill.unref?.();
+        }, timeoutMs);
+        timeout.unref?.();
+        const clearTimers = () => {
+            clearTimeout(timeout);
+            if (forceKill) clearTimeout(forceKill);
+        };
         child.stdout.on("data", (chunk) => (stdout += chunk));
         child.stderr.on("data", (chunk) => (stderr += chunk));
-        child.once("error", reject);
-        child.once("close", (status, signal) => resolve({ status, signal, stdout, stderr }));
+        child.once("error", (error) => {
+            clearTimers();
+            reject(error);
+        });
+        child.once("close", (status, signal) => {
+            clearTimers();
+            resolve({ status, signal, stdout, stderr, timedOut, command, timeoutMs });
+        });
     });
 }
 function json(result, label) {
@@ -324,10 +372,16 @@ function fakes(ctx) {
     return ["--app-id", ctx.appId, "--app-secret", ctx.appSecret, "--api-key", ctx.apiKey];
 }
 function exit(result, status, label) {
+    assertProcessCompleted(result, label);
     if (result.status !== status) throw new Error(`${label} exited ${result.status}; expected ${status}\n${format(result)}`);
 }
 function nonzero(result, label) {
+    assertProcessCompleted(result, label);
     if (result.status === 0) throw new Error(`${label} unexpectedly exited 0\n${format(result)}`);
+}
+function assertProcessCompleted(result, label) {
+    if (result.timedOut) throw new Error(`${label} timed out after ${result.timeoutMs}ms\n${format(result)}`);
+    if (result.error) throw new Error(`${label} failed to run: ${result.error.message}\n${format(result)}`);
 }
 function equals(actual, expected, label) {
     ok(actual === expected, `${label} mismatch: ${JSON.stringify(actual)}`);
@@ -339,7 +393,11 @@ function ok(condition, message) {
     if (!condition) throw new Error(message);
 }
 function output(result) { return `${result.stdout || ""}${result.stderr || ""}`; }
-function format(result) { return `stdout:\n${scrub(result.stdout || "")}\nstderr:\n${scrub(result.stderr || "")}`; }
+function format(result) {
+    const command = result.command ? `command: ${scrub(result.command)}\n` : "";
+    const signal = result.signal ? `signal: ${result.signal}\n` : "";
+    return `${command}${signal}stdout:\n${scrub(result.stdout || "")}\nstderr:\n${scrub(result.stderr || "")}`;
+}
 function scrub(value) {
     return String(value)
         .replace(/hmp_(live|test)_[A-Za-z0-9_-]+/g, "hmp_$1_[REDACTED]")
@@ -371,15 +429,40 @@ function listen(server, port) {
     });
 }
 function close(server) { return new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve()))); }
+function armChildTimeout(child, timeoutMs, label) {
+    let forceKill;
+    const timeout = setTimeout(() => {
+        child.stderrText = `${child.stderrText || ""}\n${label} timed out after ${timeoutMs}ms\n`;
+        child.kill("SIGTERM");
+        forceKill = setTimeout(() => {
+            child.stderrText = `${child.stderrText || ""}${label} ignored SIGTERM; sent SIGKILL\n`;
+            child.kill("SIGKILL");
+        }, CHILD_KILL_GRACE_MS);
+        forceKill.unref?.();
+    }, timeoutMs);
+    timeout.unref?.();
+    const clearTimers = () => {
+        clearTimeout(timeout);
+        if (forceKill) clearTimeout(forceKill);
+    };
+    child.once("exit", clearTimers);
+    return clearTimers;
+}
 function waitExit(child, ms, label) {
     if (child.exitCode !== null) return Promise.resolve();
     return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error(`${label} did not exit within ${ms}ms`)), ms);
+        const timeout = setTimeout(() => {
+            child.kill("SIGKILL");
+            reject(new Error(`${label} did not exit within ${ms}ms`));
+        }, ms);
         child.once("exit", () => {
             clearTimeout(timeout);
             resolve();
         });
     });
+}
+function commandText(bin, args) {
+    return [bin, ...args].map((arg) => (/[\s"']/.test(arg) ? JSON.stringify(arg) : arg)).join(" ");
 }
 function drain(req) {
     return new Promise((resolve) => {
