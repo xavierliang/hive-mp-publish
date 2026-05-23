@@ -17,15 +17,18 @@
 
 运行环境：
 
-- Node.js >= 22.19。
-- Gateway/server 模式推荐 Node.js 24。
+- 客户本机全局 CLI 需要 Bun；先确认 `bun --version` 可运行。
+- Gateway/server 模式使用 Node.js，生产推荐 Node.js 24。
 
-从 npm 安装 CLI：
+从 Release tarball 安装客户 CLI：
 
 ```bash
-npm install -g hive-mp-publish
+bun --version
+bun add -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/hive-mp-publish-0.1.2.tgz"
 hive-mp-publish doctor
 ```
+
+全局 `hive-mp-publish` 命令是 Bun-first。若运行时报 `/usr/bin/env: bun: No such file or directory`、`env: bun` 或 `bun: No such file or directory`，先安装 Bun，并确认 Bun 的 `bin` 目录在 `PATH` 中。
 
 让 Agent 安装时，可以直接把这份指南发给它：
 
@@ -33,39 +36,35 @@ hive-mp-publish doctor
 https://raw.githubusercontent.com/xavierliang/hive-mp-publish/main/install/hive-mp-publish.md
 ```
 
-也可以从源码安装依赖并构建：
+也可以从源码安装依赖并构建。客户侧 CLI 检查使用 Bun 直接运行构建产物：
 
 ```bash
 pnpm install
 pnpm build
-node dist/cli.js doctor
-```
-
-## Running with Bun
-
-`npm install -g` 安装后的 `hive-mp-publish` 入口仍默认使用 Node，作为稳定路径维护。已经安装 Bun 的用户可以在源码构建后直接运行同一份 `dist`：
-
-```bash
-bun ./dist/cli.js --help
 bun ./dist/cli.js doctor
-bun ./dist/cli.js serve --port 3000
 ```
 
-当前支持的是用 Bun 运行 `dist/cli.js`，不承诺 `bun build --compile` 或单文件可执行产物。Bun 下显式 `--proxy` 不支持；如果设置了 `HTTPS_PROXY` / `HTTP_PROXY` / `ALL_PROXY`，CLI 会提示并依赖 Bun 原生 `fetch` 处理这些环境变量。需要 undici 级代理拦截时请使用 Node 入口。
+当前支持的是用 Bun 运行 `dist/cli.js` 或 Release tarball 中的全局 CLI，不承诺 `bun build --compile` 或单文件可执行产物。Bun 下显式 `--proxy` 不支持；如果设置了 `HTTPS_PROXY` / `HTTP_PROXY` / `ALL_PROXY`，CLI 会提示并依赖 Bun 原生 `fetch` 处理这些环境变量。需要 undici 级代理拦截时请使用 Node 入口。
+
+## Gateway 运维
 
 在 Gateway 机器上签发一个客户 API key：
 
 ```bash
-hive-mp-publish key issue --name acme
+node ./dist/cli.js key issue --name acme
 ```
 
 启动 Gateway：
 
 ```bash
-hive-mp-publish serve --port 3000
+node ./dist/cli.js serve --port 3000
 ```
 
 生产环境应放在 Caddy/Nginx 后面，由反向代理提供 HTTPS，并把这台 Gateway 的固定公网 IP 加到微信公众号后台 IP 白名单。
+
+显式 `node ./dist/cli.js ...` 是 Gateway/server 的源码运行和部署路径；Docker 镜像也保持 Node 24 入口，不受全局 CLI 改为 Bun-first 的影响。
+
+## 客户发布
 
 客户机器配置本地公众号凭据：
 

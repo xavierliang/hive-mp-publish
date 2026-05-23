@@ -23,8 +23,17 @@
 
 ## 3. 在客户机器配置本地公众号凭据
 
+客户机器先按 [Agent 安装指南](../install/hive-mp-publish.md) 安装 Bun-first 全局 CLI，并确认：
+
 ```bash
-node dist/cli.js credential --set
+bun --version
+hive-mp-publish doctor
+```
+
+如果命令启动时报 `/usr/bin/env: bun: No such file or directory` 或 `bun: No such file or directory`，安装 Bun 或把 Bun 的 `bin` 目录加入 `PATH`。
+
+```bash
+hive-mp-publish credential --set
 ```
 
 这一步会把 `appid/appSecret` 存在客户本机配置目录，并可同时保存 Gateway API key。Gateway URL 默认是 `https://mp.resopod.cn`，客户通常不需要输入。
@@ -32,8 +41,8 @@ node dist/cli.js credential --set
 如需之后单独更新 Gateway API key 或切换 Gateway：
 
 ```bash
-node dist/cli.js credential --set-gateway --api-key hmp_live_xxx
-node dist/cli.js credential --set-gateway --server https://other-gateway.example.com --api-key hmp_live_xxx
+hive-mp-publish credential --set-gateway --api-key hmp_live_xxx
+hive-mp-publish credential --set-gateway --server https://other-gateway.example.com --api-key hmp_live_xxx
 ```
 
 Gateway 不保存公众号 secret。
@@ -50,7 +59,7 @@ WECHAT_APP_SECRET=your-secret
 ## 4. 发布文章
 
 ```bash
-node dist/cli.js publish -f article.md \
+hive-mp-publish publish -f article.md \
   --app-id your-local-alias-or-appid
 ```
 

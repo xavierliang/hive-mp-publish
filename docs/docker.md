@@ -2,6 +2,8 @@
 
 Docker 用于运行 Gateway。数据卷 `/data` 保存 SQLite API key 数据库和调用计数。
 
+镜像内部继续使用 Node 24 启动 Gateway；Docker 路径不需要安装 Bun。
+
 ```bash
 docker build -t hive-mp-publish .
 ```

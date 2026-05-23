@@ -31,15 +31,9 @@ Group=hive-mp
 WantedBy=multi-user.target
 ```
 
-## Bun 运行时
+## 运行时边界
 
-`serve` 也可以由 Bun 启动，使用同一份构建产物和相同的 `--help`、`--db`、`--env-file`、`--port` 等参数：
-
-```ini
-ExecStart=/usr/bin/bun /opt/hive-mp-publish/dist/cli.js serve --port 3000
-```
-
-生产部署目前仍推荐 Node 入口，直到 Bun 路径经过更多真实环境验证。无论使用 Node 还是 Bun，HTTPS 反向代理和固定公网 IP 白名单要求不变。
+生产部署使用 Node 24 和显式 `/usr/bin/node /opt/hive-mp-publish/dist/cli.js serve ...`。全局 `hive-mp-publish` 命令是客户侧 Bun-first CLI，不作为 systemd/server 入口。HTTPS 反向代理和固定公网 IP 白名单要求不变。
 
 ## Caddy 示例
 

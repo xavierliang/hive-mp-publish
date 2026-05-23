@@ -2,6 +2,8 @@
 
 本方案用于不能稳定访问 GitHub 的国内服务器。常规路径是服务器不拉代码、不安装宿主机 npm 依赖，只接收本地构建好的 Docker 镜像 tar 包；如果本机 Docker 没启动，也可以上传源码包后在服务器的 Docker build 环境里构建。
 
+Docker Gateway 镜像内部继续使用 Node 24；服务器 Docker 路径不需要安装 Bun。
+
 ## 服务器约定
 
 - SSH alias: `ResoPodXavierCN`
@@ -134,6 +136,8 @@ curl -fsS https://your-gateway-domain/health
 ```
 
 客户发布时使用 HTTPS Gateway URL：
+
+以下命令在客户机器上执行，使用 Bun-first 全局 `hive-mp-publish` CLI。客户机器需先按 [Agent 安装指南](../install/hive-mp-publish.md) 安装，并确认 `bun --version` 可运行。
 
 ```bash
 hive-mp-publish credential --set-gateway \

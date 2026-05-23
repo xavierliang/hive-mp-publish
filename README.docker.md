@@ -1,5 +1,7 @@
 # hive-mp-publish Docker
 
+The image runs the Gateway with Node 24 internally; Docker hosts do not need Bun for this path.
+
 Build locally:
 
 ```bash

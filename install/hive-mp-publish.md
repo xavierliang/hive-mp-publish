@@ -8,28 +8,36 @@
 
 - 不要使用 `sudo`，除非用户明确授权。
 - 不要把微信公众号 appSecret、Gateway API key 或 access_token 写入日志。
-- Node.js 需要 `>=22.19`；Gateway/server 模式推荐 Node.js 24。
+- 客户本机全局 CLI 需要 Bun；安装前先确认 `bun --version` 可运行。
+- Gateway/server 模式使用 Node.js，生产推荐 Node.js 24。
 - 远程 Gateway URL 必须使用 HTTPS。HTTP 只用于 localhost 联调。
 
-本文保持 Node/npm-first，匹配 `npm install -g` 后的默认入口。若用户已经安装 Bun 并从源码构建后运行，可以把 `node ./dist/cli.js` 替换为 `bun ./dist/cli.js`；具体限制见 README 的 “Running with Bun”。安装流程不要尝试自动检测或切换到 Bun。
+全局 `hive-mp-publish` 命令是 Bun-first，用于客户侧 `doctor`、`credential`、`publish`。Gateway 运维的 `key` 和 `serve` 不使用全局命令；源码部署时用显式 `node ./dist/cli.js ...`，或使用 Docker。
 
 ## 安装 CLI
 
-优先从 GitHub Release tarball 安装固定版本：
+从 GitHub Release tarball 安装固定版本：
 
 ```bash
-node --version
-npm --version
-npm install -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/hive-mp-publish-0.1.2.tgz"
+bun --version
+bun add -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/hive-mp-publish-0.1.2.tgz"
 hive-mp-publish doctor
 ```
 
-如果 Release tarball 暂时不可用，可以从 GitHub 仓库源码安装：
+如果 `hive-mp-publish` 启动时报 `/usr/bin/env: bun: No such file or directory`、`env: bun` 或 `bun: No such file or directory`，说明当前 shell 找不到 Bun。安装 Bun，或把 Bun 的 `bin` 目录加入 `PATH` 后再运行。
+
+如果 Release tarball 暂时不可用，不要使用 GitHub 源码仓库作为全局安装源。源码包安装不会可靠地产生已构建的 `dist/`。源码 fallback 应改为 clone、安装依赖、构建，然后用显式本地路径运行：
 
 ```bash
-npm install -g "github:xavierliang/hive-mp-publish#v0.1.2"
-hive-mp-publish doctor
+git clone https://github.com/xavierliang/hive-mp-publish.git
+cd hive-mp-publish
+git checkout v0.1.2
+pnpm install
+pnpm build
+bun ./dist/cli.js doctor
 ```
+
+源码 fallback 只用于本地路径运行，不注册全局 GitHub package。客户侧 CLI 检查用 `bun ./dist/cli.js ...`；Gateway 运维检查用 `node ./dist/cli.js ...`。
 
 ## 首次配置
 
@@ -67,16 +75,16 @@ source_url: https://example.com/original
 
 ## Gateway 运维命令
 
-在 Gateway 机器上签发 API key：
+在 Gateway 机器源码构建后，用 Node 显式运行运维命令签发 API key：
 
 ```bash
-hive-mp-publish key issue --name "<customer-name>"
+node ./dist/cli.js key issue --name "<customer-name>"
 ```
 
 启动 Gateway：
 
 ```bash
-hive-mp-publish serve --port 3000
+node ./dist/cli.js serve --port 3000
 ```
 
 生产环境应放在 Caddy/Nginx 后面，由反向代理提供 HTTPS，并把 Gateway 固定公网 IP 加到微信公众号后台 IP 白名单。
@@ -115,7 +123,8 @@ curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2
 ## 常见失败
 
 - `hive-mp-publish` 不在 PATH：让用户重开 shell，或重新运行全局安装命令。
-- `doctor` 提示 Node 版本过低：安装 Node.js 22.19+，Gateway/server 推荐 Node.js 24。
+- `/usr/bin/env: bun: No such file or directory` 或 `bun: No such file or directory`：安装 Bun，或把 Bun 的 `bin` 目录加入 `PATH`。
+- Gateway 运维命令提示 Node 版本过低：服务器安装 Node.js 24。
 - `doctor` 提示凭据未配置：运行 `hive-mp-publish credential --set`。
 - 微信返回 IP 白名单错误：确认添加的是 Gateway 固定公网 IP，不是客户本机 IP。
 - `401 Missing API key` 或 `401 Invalid API key`：运行 `hive-mp-publish credential --show-gateway` 检查本机是否保存 Gateway API key；如需轮换，运行 `hive-mp-publish credential --set-gateway --api-key <key>`。

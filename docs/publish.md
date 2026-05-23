@@ -2,6 +2,8 @@
 
 `publish` 将 Markdown 渲染为微信公众号图文 HTML，并发布到草稿箱。
 
+本页命令是客户侧全局 CLI，入口为 Bun-first。先按 [Agent 安装指南](../install/hive-mp-publish.md) 安装，并确认 `bun --version` 可运行；如果命令启动时报 `/usr/bin/env: bun: No such file or directory` 或 `bun: No such file or directory`，安装 Bun 或把 Bun 的 `bin` 目录加入 `PATH`。
+
 ## 本地凭据
 
 推荐先把公众号凭据保存在客户本机：

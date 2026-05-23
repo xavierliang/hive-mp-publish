@@ -2,7 +2,7 @@
 
 本文用于把 `hive-mp-publish` 跑通到第一个真实公众号草稿箱。
 
-> 本 walkthrough 保持 Node-first。若你已经安装 Bun 并希望使用它，源码构建后的等价命令是把 `node ./dist/cli.js` 替换为 `bun ./dist/cli.js`；详见 README 的 “Running with Bun”。不要为 Bun 复制一套逐条命令。
+> Gateway/server 命令在源码构建目录中用 `node ./dist/cli.js ...` 显式运行；客户本机的 `credential`、`publish`、`doctor` 使用 Bun-first 全局 `hive-mp-publish`。客户 CLI 安装和缺 Bun 排障见 [Agent 安装指南](../install/hive-mp-publish.md)。
 
 ## 整体链路和边界
 
@@ -70,7 +70,7 @@ export HIVE_MP_GATEWAY_DB=/var/lib/hive-mp-publish/gateway.sqlite
 在 Gateway 机器上为客户签发 API key：
 
 ```bash
-node dist/cli.js key issue \
+node ./dist/cli.js key issue \
   --name acme \
   --monthly-limit 1000 \
   --rate-limit-per-minute 60 \
@@ -80,7 +80,7 @@ node dist/cli.js key issue \
 也可以输出 JSON：
 
 ```bash
-node dist/cli.js key issue --name acme --json
+node ./dist/cli.js key issue --name acme --json
 ```
 
 返回的 `API Key: hmp_live_xxx` 只显示一次；SQLite 里只保存 hash。
@@ -94,20 +94,20 @@ node dist/cli.js key issue --name acme --json
 查看 key 和当月用量：
 
 ```bash
-node dist/cli.js key list --db /var/lib/hive-mp-publish/gateway.sqlite
-node dist/cli.js key list --db /var/lib/hive-mp-publish/gateway.sqlite --json
+node ./dist/cli.js key list --db /var/lib/hive-mp-publish/gateway.sqlite
+node ./dist/cli.js key list --db /var/lib/hive-mp-publish/gateway.sqlite --json
 ```
 
 撤销 key：
 
 ```bash
-node dist/cli.js key revoke --id 1 --db /var/lib/hive-mp-publish/gateway.sqlite
+node ./dist/cli.js key revoke --id 1 --db /var/lib/hive-mp-publish/gateway.sqlite
 ```
 
 或用完整 key 撤销：
 
 ```bash
-node dist/cli.js key revoke --key hmp_live_xxx --db /var/lib/hive-mp-publish/gateway.sqlite
+node ./dist/cli.js key revoke --key hmp_live_xxx --db /var/lib/hive-mp-publish/gateway.sqlite
 ```
 
 撤销后下一次请求立即返回 401。
@@ -117,7 +117,7 @@ node dist/cli.js key revoke --key hmp_live_xxx --db /var/lib/hive-mp-publish/gat
 直接启动：
 
 ```bash
-node dist/cli.js serve \
+node ./dist/cli.js serve \
   --port 3000 \
   --db /var/lib/hive-mp-publish/gateway.sqlite
 ```
@@ -197,10 +197,17 @@ curl https://mp-gateway.example.com/verify \
 
 ## 客户端凭据配置
 
+客户本机先按安装指南安装 Bun-first 全局 CLI，并确认：
+
+```bash
+bun --version
+hive-mp-publish doctor
+```
+
 推荐客户在本机交互式保存公众号凭据：
 
 ```bash
-node dist/cli.js credential --set
+hive-mp-publish credential --set
 ```
 
 按提示输入：
@@ -215,7 +222,7 @@ node dist/cli.js credential --set
 如需单独更新 Gateway API key 或切换 Gateway：
 
 ```bash
-node dist/cli.js credential --set-gateway \
+hive-mp-publish credential --set-gateway \
   --server https://mp-gateway.example.com \
   --api-key hmp_live_xxx
 ```
@@ -265,20 +272,20 @@ only_fans_can_comment: 0
 客户已执行 `credential --set` 时：
 
 ```bash
-node dist/cli.js publish -f article.md --app-id your-local-alias-or-appid
+hive-mp-publish publish -f article.md --app-id your-local-alias-or-appid
 ```
 
 使用 `.env` 时：
 
 ```bash
-node dist/cli.js publish -f article.md \
+hive-mp-publish publish -f article.md \
   --env-file .env
 ```
 
 临时显式传 secret 时：
 
 ```bash
-node dist/cli.js publish -f article.md \
+hive-mp-publish publish -f article.md \
   --app-id wx123 \
   --app-secret your-secret
 ```
@@ -296,8 +303,8 @@ node dist/cli.js publish -f article.md \
 localhost 可使用 HTTP：
 
 ```bash
-node dist/cli.js serve --port 3000 --db /tmp/gateway.sqlite
-node dist/cli.js publish -f article.md \
+node ./dist/cli.js serve --port 3000 --db /tmp/gateway.sqlite
+hive-mp-publish publish -f article.md \
   --app-id your-local-alias-or-appid \
   --server http://localhost:3000 \
   --api-key hmp_live_xxx
