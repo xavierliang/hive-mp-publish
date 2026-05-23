@@ -24,7 +24,7 @@
 
 ```bash
 bun --version
-bun add -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/hive-mp-publish-0.1.2.tgz"
+bun add -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.3/hive-mp-publish-0.1.3.tgz"
 hive-mp-publish doctor
 ```
 
@@ -36,7 +36,7 @@ hive-mp-publish doctor
 https://raw.githubusercontent.com/xavierliang/hive-mp-publish/main/install/hive-mp-publish.md
 ```
 
-也可以从源码安装依赖并构建。客户侧 CLI 检查使用 Bun 直接运行构建产物：
+也可以从源码安装依赖并构建。源码构建需要 Node.js 和 pnpm；客户侧 CLI 检查使用 Bun 直接运行构建产物：
 
 ```bash
 pnpm install

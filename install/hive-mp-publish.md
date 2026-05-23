@@ -20,18 +20,18 @@
 
 ```bash
 bun --version
-bun add -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/hive-mp-publish-0.1.2.tgz"
+bun add -g "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.3/hive-mp-publish-0.1.3.tgz"
 hive-mp-publish doctor
 ```
 
 如果 `hive-mp-publish` 启动时报 `/usr/bin/env: bun: No such file or directory`、`env: bun` 或 `bun: No such file or directory`，说明当前 shell 找不到 Bun。安装 Bun，或把 Bun 的 `bin` 目录加入 `PATH` 后再运行。
 
-如果 Release tarball 暂时不可用，不要使用 GitHub 源码仓库作为全局安装源。源码包安装不会可靠地产生已构建的 `dist/`。源码 fallback 应改为 clone、安装依赖、构建，然后用显式本地路径运行：
+如果 Release tarball 暂时不可用，不要使用 GitHub 源码仓库作为全局安装源。Bun-first Release tarball 仍是首选安装路径；源码包安装不会可靠地产生已构建的 `dist/`。源码 fallback 需要本机具备 Node.js 和 pnpm 用于安装依赖与构建，应改为 clone、安装依赖、构建，然后用显式本地路径运行：
 
 ```bash
 git clone https://github.com/xavierliang/hive-mp-publish.git
 cd hive-mp-publish
-git checkout v0.1.2
+git checkout v0.1.3
 pnpm install
 pnpm build
 bun ./dist/cli.js doctor
@@ -98,7 +98,7 @@ Codex 默认目录如下；如果用户使用 Claude Code、Cursor 或其他 Age
 ```bash
 SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
 mkdir -p "$SKILLS_DIR"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/hive-mp-publish-skills.tar.gz" | tar -xz -C "$SKILLS_DIR"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.3/hive-mp-publish-skills.tar.gz" | tar -xz -C "$SKILLS_DIR"
 ```
 
 安装后目标目录应包含：
@@ -113,11 +113,11 @@ apply-wechat-custom-theme/SKILL.md
 
 ```bash
 mkdir -p "$SKILLS_DIR/publish-to-wechat"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/publish-to-wechat.tar.gz" | tar -xz -C "$SKILLS_DIR/publish-to-wechat"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.3/publish-to-wechat.tar.gz" | tar -xz -C "$SKILLS_DIR/publish-to-wechat"
 mkdir -p "$SKILLS_DIR/generate-wechat-theme"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/generate-wechat-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/generate-wechat-theme"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.3/generate-wechat-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/generate-wechat-theme"
 mkdir -p "$SKILLS_DIR/apply-wechat-custom-theme"
-curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.2/apply-wechat-custom-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/apply-wechat-custom-theme"
+curl -L "https://github.com/xavierliang/hive-mp-publish/releases/download/v0.1.3/apply-wechat-custom-theme.tar.gz" | tar -xz -C "$SKILLS_DIR/apply-wechat-custom-theme"
 ```
 
 ## 常见失败

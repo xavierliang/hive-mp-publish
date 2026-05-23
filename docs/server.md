@@ -48,7 +48,7 @@ export HIVE_MP_GATEWAY_DB=/var/lib/hive-mp-publish/gateway.sqlite
 {
   "status": "ok",
   "service": "hive-mp-publish-gateway",
-  "version": "0.1.2"
+  "version": "0.1.3"
 }
 ```
 

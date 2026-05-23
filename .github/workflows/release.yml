@@ -75,6 +75,29 @@ jobs:
           rm -rf release-assets
           mkdir -p release-assets
           npm pack --pack-destination release-assets
+          shopt -s nullglob
+          tgz_files=(release-assets/hive-mp-publish-*.tgz)
+          if [ "${#tgz_files[@]}" -ne 1 ]; then
+            printf 'Expected exactly one hive-mp-publish tgz in release-assets, found %s\n' "${#tgz_files[@]}" >&2
+            printf '%s\n' "${tgz_files[@]}" >&2
+            exit 1
+          fi
+
+          tarball_listing="$(tar -tzf "${tgz_files[0]}")"
+          printf '%s\n' "$tarball_listing"
+          unexpected_paths="$(
+            printf '%s\n' "$tarball_listing" | while IFS= read -r path; do
+              case "$path" in
+                (package/|package/dist/|package/dist/*|package/package.json|package/README.md|package/README.docker.md|package/LICENSE|package/NOTICE) ;;
+                (*) printf '%s\n' "$path" ;;
+              esac
+            done
+          )"
+          if [ -n "$unexpected_paths" ]; then
+            printf 'Unexpected files in npm tarball:\n%s\n' "$unexpected_paths" >&2
+            exit 1
+          fi
+
           tar -czf release-assets/hive-mp-publish-skills.tar.gz -C skills publish-to-wechat generate-wechat-theme apply-wechat-custom-theme
           tar -czf release-assets/publish-to-wechat.tar.gz -C skills/publish-to-wechat .
           tar -czf release-assets/generate-wechat-theme.tar.gz -C skills/generate-wechat-theme .
