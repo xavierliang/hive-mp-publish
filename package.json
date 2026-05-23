@@ -14,9 +14,6 @@
     "renderer"
   ],
   "type": "module",
-  "engines": {
-    "node": ">=22.19.0"
-  },
   "bin": {
     "hive-mp-publish": "./dist/cli.js"
   },
