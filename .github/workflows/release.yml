@@ -114,9 +114,12 @@ jobs:
             exit 1
           fi
 
+          tarball_path="$(realpath "${tgz_files[0]}")"
+          printf 'Installing package tarball: %s\n' "$tarball_path"
+
           export BUN_INSTALL="$(mktemp -d)"
           export PATH="$BUN_INSTALL/bin:$PATH"
-          bun add -g "${tgz_files[0]}"
+          bun add -g "$tarball_path"
 
           bin_path="$(command -v hive-mp-publish)"
           case "$bin_path" in
